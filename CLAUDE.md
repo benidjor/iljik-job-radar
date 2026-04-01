@@ -17,6 +17,19 @@
 ## 환경변수
 .env 파일 참고 (.env.example 복사 후 작성)
 
+## 요구 사항
+- Python 3.11+
+- pip
+
+## 초기 설정
+```bash
+cp .env.example .env
+# .env 파일을 열어 실제 값 입력
+
+pip install -r requirements.txt -r requirements-dev.txt
+playwright install chromium
+```
+
 ## 실행
 python main.py --mode all       # 스크래핑 + 알림
 python main.py --mode scrape    # 스크래핑만
