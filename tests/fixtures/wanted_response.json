@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "id": 123456,
+      "position": "ML 엔지니어",
+      "company": {"name": "당근"},
+      "due_time": "2026-04-17T00:00:00",
+      "experience_level": {"name": "신입"}
+    },
+    {
+      "id": 999999,
+      "position": "마케터",
+      "company": {"name": "A사"},
+      "due_time": null,
+      "experience_level": {"name": "경력"}
+    }
+  ]
+}
