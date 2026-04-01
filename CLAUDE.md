@@ -1,0 +1,29 @@
+# job-automation
+
+채용 공고 자동 수집 → Notion 아카이빙 → Discord 알림 파이프라인.
+
+## 프로젝트 구조
+- scraper/                 : 사이트별 스크래퍼 모듈 (현재: 원티드, 직행)
+- tests/                   : pytest 테스트
+- tests/fixtures/          : 스크래퍼 테스트용 HTML/JSON 픽스처
+- main.py                  : 진입점 (실행 모드: scrape / notify / all)
+- notion_client_wrapper.py : Notion DB 연동 (채용공고 DB + 서류작성 DB)
+- discord_notifier.py      : Discord 알림 3종
+
+## Notion DB 구조
+- NOTION_JOB_DB_ID : 상단 채용 공고 아카이빙 DB (봇이 자동 저장)
+- NOTION_DOC_DB_ID : 하단 서류 작성 DB (사람이 직접 작성, 지원공고 관계형 컬럼으로 상단 DB 참조)
+
+## 환경변수
+.env 파일 참고 (.env.example 복사 후 작성)
+
+## 실행
+python main.py --mode all       # 스크래핑 + 알림
+python main.py --mode scrape    # 스크래핑만
+python main.py --mode notify    # 알림만
+
+## 테스트
+pytest tests/ -v
+
+## GitHub Actions
+.github/workflows/job-scraper.yml — cron 09:00/13:00/18:00 KST
