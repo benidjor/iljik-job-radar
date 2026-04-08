@@ -24,7 +24,7 @@ def test_wanted_scraper_returns_only_target_jobs():
     assert jobs[0].company == "당근"
     assert jobs[0].title == "ML 엔지니어"
     assert jobs[0].source == "원티드"
-    assert jobs[0].deadline == "2026-04-17"
+    assert jobs[0].deadline == "2026-04-17T00:00:00"
     assert jobs[0].career_type == "신입"
     assert jobs[0].url == "https://www.wanted.co.kr/wd/123456"
 

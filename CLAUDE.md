@@ -40,3 +40,6 @@ pytest tests/ -v
 
 ## GitHub Actions
 .github/workflows/job-scraper.yml — cron 09:00/13:00/18:00 KST
+
+## Claude Code Hooks
+.claude/settings.json — Edit/Write 후 pytest 자동 실행 (PostToolUse hook)
