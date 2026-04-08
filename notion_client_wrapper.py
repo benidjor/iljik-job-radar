@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from notion_client import Client
 
@@ -17,10 +17,15 @@ class NotionClient:
         self._job_db_id = os.environ["NOTION_JOB_DB_ID"]
         self._doc_db_id = os.environ["NOTION_DOC_DB_ID"]
 
-    def is_duplicate(self, url: str) -> bool:
+    def is_duplicate(self, job: JobPosting) -> bool:
         res = self._client.databases.query(
             database_id=self._job_db_id,
-            filter={"property": "URL", "url": {"equals": url}},
+            filter={
+                "and": [
+                    {"property": "기업명", "title": {"equals": job.company}},
+                    {"property": "직무명", "multi_select": {"contains": job.title.replace(",", "·")}},
+                ]
+            },
         )
         return len(res["results"]) > 0
 
@@ -35,6 +40,7 @@ class NotionClient:
             properties["모집 마감 기간"] = {"date": {"start": job.deadline}}
         if job.career_type:
             properties["신입/경력"] = {"multi_select": [{"name": job.career_type}]}
+        properties["등록 날짜"] = {"date": {"start": date.today().isoformat()}}
         self._client.pages.create(
             parent={"database_id": self._job_db_id},
             properties=properties,
@@ -54,9 +60,22 @@ class NotionClient:
         target_date = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
         res = self._client.databases.query(
             database_id=self._doc_db_id,
-            filter={"property": "서류 마감 기한", "date": {"equals": target_date}},
+            filter={"property": "리뷰해주세요", "date": {"equals": target_date}},
         )
-        return res["results"]
+        pages = res["results"]
+        for page in pages:
+            relation = page["properties"].get("지원 공고", {}).get("relation", [])
+            company = ""
+            job_deadline = ""
+            if relation:
+                related = self._client.pages.retrieve(page_id=relation[0]["id"])
+                title_prop = related["properties"].get("기업명", {}).get("title", [])
+                company = title_prop[0]["text"]["content"] if title_prop else ""
+                date_prop = related["properties"].get("모집 마감 기간", {}).get("date")
+                job_deadline = date_prop["start"][:10] if date_prop else ""
+            page["_company"] = company
+            page["_job_deadline"] = job_deadline
+        return pages
 
     def get_all_jobs(self) -> list[dict]:
         res = self._client.databases.query(database_id=self._job_db_id)

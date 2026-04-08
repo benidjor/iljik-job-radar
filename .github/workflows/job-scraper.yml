@@ -2,9 +2,8 @@ name: Job Scraper
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # 09:00 KST (UTC 00:00)
-    - cron: '0 4 * * *'   # 13:00 KST (UTC 04:00)
-    - cron: '0 9 * * *'   # 18:00 KST (UTC 09:00)
+    - cron: '0 3 * * *'   # 12:00 KST (UTC 03:00)
+    - cron: '0 10 * * *'  # 19:00 KST (UTC 10:00)
   workflow_dispatch:       # 수동 실행
 
 jobs:
