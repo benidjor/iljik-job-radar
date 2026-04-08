@@ -21,22 +21,65 @@ def extract_job_page_info(page: dict) -> dict:
     return {"company": company, "title": title, "url": url, "deadline": deadline}
 
 
+# (매칭 키워드, 체크박스 컬럼명, 표시 이름)
+_REVIEW_CHECKBOX_MAP = [
+    ("상택",     "리뷰완(상택)", "상택"),
+    ("Sangteck", "리뷰완(상택)", "상택"),
+    ("채원",     "리뷰완(채원)", "채원"),
+    ("협",       "리뷰완(협)",   "협"),
+]
+
+
+def _get_review_info(name: str) -> tuple:
+    """(체크박스 컬럼명, 표시 이름) 반환. 매칭 없으면 (None, 원본 이름)."""
+    for keyword, col, display in _REVIEW_CHECKBOX_MAP:
+        if keyword in name:
+            return col, display
+    return None, name
+
+
 def extract_doc_page_info(page: dict) -> dict:
-    """하단 서류 작성 DB 페이지에서 정보 추출."""
+    """하단 서류 작성 DB 페이지에서 정보 추출. _company/_job_deadline 키는 NotionClient에서 주입됨."""
     props = page["properties"]
-    company = props.get("기업명", {}).get("title", [{}])[0].get("text", {}).get("content", "")
-    rt = props.get("직무", {}).get("rich_text", [{}])
-    title = rt[0].get("text", {}).get("content", "") if rt else ""
-    date_obj = props.get("서류 마감 기한", {}).get("date")
-    doc_deadline = date_obj["start"][:10] if date_obj else ""
-    status = props.get("Status", {}).get("select", {}).get("name", "")
-    assignees = [p["name"] for p in props.get("지원자/담당자", {}).get("people", [])]
+    company = page.get("_company", "")
+    job_deadline = page.get("_job_deadline", "")
+
+    applicant_prop = props.get("-", {}).get("title", [])
+    applicant = applicant_prop[0]["text"]["content"] if applicant_prop else ""
+
+    rt = props.get("지원 직무", {}).get("rich_text", [{}])
+    job_title = rt[0].get("text", {}).get("content", "") if rt else ""
+
+    review_date_obj = props.get("리뷰해주세요", {}).get("date")
+    doc_deadline = review_date_obj["start"][:10] if review_date_obj else ""
+
+    draft_date_obj = props.get("이때까지 낼게요", {}).get("date")
+    draft_deadline = draft_date_obj["start"][:10] if draft_date_obj else ""
+
+    status = props.get("Status", {}).get("status", {}).get("name", "")
+    assignees = [p["name"] for p in props.get("마니또", {}).get("people", [])]
+
+    review_status = []
+    for name in assignees:
+        col, display = _get_review_info(name)
+        if col:
+            done = props.get(col, {}).get("checkbox", False)
+            review_status.append(("✅" if done else "⬜", display))
+
+    req_rt = props.get("리뷰이 요청사항", {}).get("rich_text", [])
+    request_notes = req_rt[0]["text"]["content"] if req_rt else ""
+
     return {
         "company": company,
-        "title": title,
+        "applicant": applicant,
+        "job_title": job_title,
         "doc_deadline": doc_deadline,
+        "draft_deadline": draft_deadline,
+        "job_deadline": job_deadline,
         "status": status,
         "assignees": assignees,
+        "review_status": review_status,
+        "request_notes": request_notes,
     }
 
 
@@ -82,19 +125,55 @@ class DiscordNotifier:
         )
         self._post_webhook(content)
 
-    def send_doc_deadline_reminder(self, page: dict, days_left: int) -> None:
-        """서류 마감 리마인드 + 담당자 멘션 (하단 서류 작성 DB 참조)."""
-        info = extract_doc_page_info(page)
+    def send_separator(self) -> None:
+        """메시지 사이 시각적 구분선 전송."""
+        self._post_webhook("─" * 40)
+
+    def send_scrape_summary(self, counts: dict) -> None:
+        """스크래핑 결과 직무별 요약 메시지 전송."""
+        today = datetime.now().strftime("%Y-%m-%d")
+        total = sum(counts.values())
+        lines = [f"# 📊 신규 채용 공고 요약", f"-# {today}", ""]
+        if counts:
+            for category, count in sorted(counts.items(), key=lambda x: -x[1]):
+                lines.append(f"> **{category}**  {count}건")
+            lines.append("")
+            lines.append(f"-# 총 **{total}건** 노션에 추가되었습니다.")
+        else:
+            lines.append("> 신규 공고 없음")
+        self._post_webhook("\n".join(lines))
+
+    def send_doc_deadline_reminder(self, pages: list[dict], days_left: int) -> None:
+        """리뷰 마감 리마인드. 리뷰 완료자는 이름만, 미완료자는 @멘션. 같은 날짜 항목을 한 메시지로 묶음."""
+        if not pages:
+            return
         label = f"D-{days_left}" if days_left > 0 else "D-DAY"
-        mentions = " ".join(
-            f"<@{self._user_map[name]}>"
-            for name in info["assignees"]
-            if name in self._user_map
-        )
-        content = (
-            f"{mentions} 📝 **서류 마감 {label} 알림**\n"
-            f"[{info['company']}] {info['title']}\n"
-            f"서류 마감일: {info['doc_deadline']}\n"
-            f"현재 상태: {info['status']}"
-        )
-        self._post_webhook(content)
+        infos = [extract_doc_page_info(p) for p in pages]
+        review_deadline = infos[0]["doc_deadline"]
+        lines = [
+            f"# 📝 리뷰해주세요 {label}",
+            f"-# 리뷰 마감일: {review_deadline}",
+        ]
+        for info in infos:
+            reviewed = {name for icon, name in info["review_status"] if icon == "✅"}
+            manicotto_parts = []
+            for name in info["assignees"]:
+                if name in reviewed:
+                    manicotto_parts.append(name)
+                elif name in self._user_map:
+                    manicotto_parts.append(f"<@{self._user_map[name]}>")
+                else:
+                    manicotto_parts.append(name)
+
+            lines.append("")
+            lines.append(f"### {info['company']}  ·  {info['job_title']}")
+            lines.append(f"-# 지원자: {info['applicant']}")
+            lines.append(f"> • **상태** {info['status']}")
+            lines.append(f"> • **일정** 초안 `{info['draft_deadline']}`  →  제출 `{info['job_deadline']}`  →  리뷰 `{info['doc_deadline']}`")
+            if info["review_status"]:
+                review_str = "  ".join(f"{icon} {name}" for icon, name in info["review_status"])
+                lines.append(f"> • **리뷰 현황** {review_str}")
+            if info["request_notes"]:
+                lines.append(f"> • **요청사항** {info['request_notes']}")
+            lines.append(f"> • **마니또** {' '.join(manicotto_parts)}")
+        self._post_webhook("\n".join(lines))

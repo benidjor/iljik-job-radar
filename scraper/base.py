@@ -32,7 +32,7 @@ class BaseScraper(ABC):
         "AI 엔지니어", "AI엔지니어", "AI Engineer", "인공지능 엔지니어",
     ]
 
-    EXCLUDE_KEYWORDS = ["시니어", "Senior", "Sr."]
+    EXCLUDE_KEYWORDS = ["시니어", "Senior", "Sr.", "병역특례", "멘토", "강사"]
 
     @abstractmethod
     def scrape(self) -> list[JobPosting]:
