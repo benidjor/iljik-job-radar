@@ -4,3 +4,6 @@ __pycache__/
 .pytest_cache/
 .playwright/
 .venv/
+tests/fixtures/jikhae_response.html
+delete_bot_entries.py
+*.deb
