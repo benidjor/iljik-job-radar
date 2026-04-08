@@ -1,0 +1,35 @@
+name: Job Scraper
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 09:00 KST (UTC 00:00)
+    - cron: '0 4 * * *'   # 13:00 KST (UTC 04:00)
+    - cron: '0 9 * * *'   # 18:00 KST (UTC 09:00)
+  workflow_dispatch:       # 수동 실행
+
+jobs:
+  scrape-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: playwright install chromium
+
+      - name: Run scraper
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_JOB_DB_ID: ${{ secrets.NOTION_JOB_DB_ID }}
+          NOTION_DOC_DB_ID: ${{ secrets.NOTION_DOC_DB_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_USER_MAP: ${{ secrets.DISCORD_USER_MAP }}
+        run: python main.py --mode all

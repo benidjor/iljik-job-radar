@@ -25,9 +25,9 @@ def test_base_scraper_target_jobs():
         def scrape(self):
             return []
     s = ConcreteScraper()
-    assert "DE" in s.TARGET_JOBS
-    assert "MLE" in s.TARGET_JOBS
-    assert "DS" in s.TARGET_JOBS
+    assert "Data Engineer" in s.TARGET_JOBS
+    assert "ML Engineer" in s.TARGET_JOBS
+    assert "Data Scientist" in s.TARGET_JOBS
 
 
 def test_is_target_job_matches_korean():
