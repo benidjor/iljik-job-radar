@@ -5,6 +5,8 @@
       "position": "ML 엔지니어",
       "company": {"name": "당근"},
       "due_time": "2026-04-17T00:00:00",
+      "annual_from": 0,
+      "annual_to": 0,
       "experience_level": {"name": "신입"}
     },
     {
@@ -12,6 +14,8 @@
       "position": "마케터",
       "company": {"name": "A사"},
       "due_time": null,
+      "annual_from": null,
+      "annual_to": null,
       "experience_level": {"name": "경력"}
     }
   ]
