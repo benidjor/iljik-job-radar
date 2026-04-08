@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import requests
+from datetime import datetime, timedelta
 
 from .base import BaseScraper, JobPosting
 
@@ -59,8 +60,12 @@ class ZighangScraper(BaseScraper):
     def _parse(self, data: dict) -> list[JobPosting]:
         results = []
         content = data.get("data", {}).get("content", [])
+        cutoff = datetime.now() - timedelta(days=30)
         for item in content:
             try:
+                created_at = item.get("createdAt", "")
+                if created_at and datetime.fromisoformat(created_at[:19]) < cutoff:
+                    continue
                 title = item.get("title", "").strip()
                 if not self.is_target_job(title):
                     continue
