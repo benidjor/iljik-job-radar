@@ -1,4 +1,4 @@
-# job-automation
+# samjik-job-radar
 
 채용 공고 자동 수집 → Notion 아카이빙 → Discord 알림 파이프라인.
 
