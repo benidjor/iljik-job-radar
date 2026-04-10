@@ -164,6 +164,17 @@
 -# 총 6건 노션에 추가되었습니다.
 ```
 
+<table>
+  <tr>
+    <td align="center"><b>개편 전</b></td>
+    <td align="center"><b>개편 후</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://i.imgur.com/52mJnsX.png" width="400"/></td>
+    <td><img src="https://i.imgur.com/j0rhrnW.png" width="400"/></td>
+  </tr>
+</table>
+
 ### 리뷰 알림 메시지 (D-3 / D-1 / D-DAY)
 
 - `리뷰해주세요` 컬럼 날짜 기준으로 D-3 / D-1 / D-DAY 각각 발송
@@ -184,6 +195,17 @@
 > • 요청사항  자소서 2번 문항 위주로 봐주세요
 > • 마니또  팀원A  @팀원B
 ```
+
+<table>
+  <tr>
+    <td align="center"><b>개편 전</b></td>
+    <td align="center"><b>개편 후</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://i.imgur.com/GEaRCF3.png" width="400"/></td>
+    <td><img src="https://i.imgur.com/6moP0Zr.png" width="400"/></td>
+  </tr>
+</table>
 
 ---
 
