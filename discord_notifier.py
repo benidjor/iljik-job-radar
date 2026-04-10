@@ -43,6 +43,7 @@ def extract_doc_page_info(page: dict) -> dict:
     props = page["properties"]
     company = page.get("_company", "")
     job_deadline = page.get("_job_deadline", "")
+    page_url = page.get("url", "")
 
     applicant_prop = props.get("-", {}).get("title", [])
     applicant = applicant_prop[0]["text"]["content"] if applicant_prop else ""
@@ -80,6 +81,7 @@ def extract_doc_page_info(page: dict) -> dict:
         "assignees": assignees,
         "review_status": review_status,
         "request_notes": request_notes,
+        "page_url": page_url,
     }
 
 
@@ -90,6 +92,22 @@ class DiscordNotifier:
         self._user_map = dict(
             item.split(":") for item in user_map_raw.split(",") if ":" in item
         )
+        self._category_display_names = {
+            "AE":  "Analytics Engineer",
+            "AIE": "AI Engineer",
+            "DA":  "Data Analyst",
+            "DE":  "Data Engineer",
+            "DS":  "Data Scientist",
+            "MLE": "ML Engineer",
+        }
+        self._notion_category_urls = {
+            "AE":  "https://www.notion.so/3040de90854f80dc870ce381be63f887?v=33e0de90854f8055bc1f000ce8555223",
+            "AIE": "https://www.notion.so/3040de90854f80dc870ce381be63f887?v=33e0de90854f802dbcd7000cc2afc65f",
+            "DA":  "https://www.notion.so/3040de90854f80dc870ce381be63f887?v=33e0de90854f80ff849e000c290d291b",
+            "DE":  "https://www.notion.so/3040de90854f80dc870ce381be63f887?v=33e0de90854f80adaf9c000c2f70213f",
+            "DS":  "https://www.notion.so/3040de90854f80dc870ce381be63f887?v=33e0de90854f80b89458000cb85d39f8",
+            "MLE": "https://www.notion.so/3040de90854f80dc870ce381be63f887?v=33e0de90854f808ab3be000c4c7e8fb0",
+        }
 
     def _post_webhook(self, content: str) -> None:
         try:
@@ -136,7 +154,12 @@ class DiscordNotifier:
         lines = [f"# 📊 신규 채용 공고 요약", f"-# {today}", ""]
         if counts:
             for category, count in sorted(counts.items(), key=lambda x: -x[1]):
-                lines.append(f"> **{category}**  {count}건")
+                display = self._category_display_names.get(category, category)
+                url = self._notion_category_urls.get(category)
+                if url:
+                    lines.append(f"> [**{display}**]({url})  {count}건")
+                else:
+                    lines.append(f"> **{display}**  {count}건")
             lines.append("")
             lines.append(f"-# 총 **{total}건** 노션에 추가되었습니다.")
         else:
@@ -166,7 +189,9 @@ class DiscordNotifier:
                     manicotto_parts.append(name)
 
             lines.append("")
-            lines.append(f"### {info['company']}  ·  {info['job_title']}")
+            page_url = info.get("page_url", "")
+            header = f"[{info['company']}  ·  {info['job_title']}]({page_url})" if page_url else f"{info['company']}  ·  {info['job_title']}"
+            lines.append(f"### {header}")
             lines.append(f"-# 지원자: {info['applicant']}")
             lines.append(f"> • **상태** {info['status']}")
             lines.append(f"> • **일정** 초안 `{info['draft_deadline']}`  →  제출 `{info['job_deadline']}`  →  리뷰 `{info['doc_deadline']}`")

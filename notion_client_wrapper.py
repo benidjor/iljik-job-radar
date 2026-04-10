@@ -29,7 +29,7 @@ class NotionClient:
         )
         return len(res["results"]) > 0
 
-    def add_job(self, job: JobPosting) -> None:
+    def add_job(self, job: JobPosting, category=None) -> None:
         properties: dict = {
             "기업명": {"title": [{"text": {"content": job.company}}]},
             "직무명": {"multi_select": [{"name": job.title.replace(",", "·")}]},
@@ -41,6 +41,8 @@ class NotionClient:
         if job.career_type:
             properties["신입/경력"] = {"multi_select": [{"name": job.career_type}]}
         properties["등록 날짜"] = {"date": {"start": date.today().isoformat()}}
+        if category:
+            properties["직무 분류"] = {"select": {"name": category}}
         self._client.pages.create(
             parent={"database_id": self._job_db_id},
             properties=properties,
