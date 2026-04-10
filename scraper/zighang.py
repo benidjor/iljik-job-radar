@@ -10,17 +10,17 @@ logger = logging.getLogger(__name__)
 
 SEARCH_KEYWORDS = [
     # DE
-    "데이터엔지니어", "Data Engineer",
-    # DAE
-    "데이터애널리틱스엔지니어", "Analytics Engineer",
+    "데이터 엔지니어", "Data Engineer",
+    # AE
+    "데이터 애널리틱스 엔지니어", "Analytics Engineer",
     # DA
-    "데이터분석가", "Data Analyst",
+    "데이터 분석가", "Data Analyst",
     # DS
-    "데이터사이언티스트", "Data Scientist",
+    "데이터 사이언티스트", "Data Scientist",
     # MLE
-    "머신러닝엔지니어", "Machine Learning Engineer", "MLOps",
+    "머신러닝 엔지니어", "Machine Learning Engineer", "ML Engineer", "ML 엔지니어", "MLOps",
     # AIE
-    "AI엔지니어", "AI Engineer",
+    "AI 엔지니어", "AI Engineer",
 ]
 
 

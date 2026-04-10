@@ -13,22 +13,23 @@ from discord_notifier import DiscordNotifier
 
 
 # 직무 카테고리 분류 (순서 중요: 더 구체적인 것 먼저)
+# (Notion 직무 분류 컬럼 값, 키워드 목록)
 _CATEGORY_KEYWORDS = [
-    ("Analytics Engineer", ["analytics engineer", "데이터 애널리틱스", "데이터애널리틱스", "애널리틱스 엔지니어"]),
-    ("데이터 엔지니어",    ["데이터 엔지니어", "데이터엔지니어", "data engineer"]),
-    ("데이터 분석가",      ["데이터 분석가", "데이터분석가", "data analyst"]),
-    ("데이터 사이언티스트", ["데이터 사이언티스트", "데이터사이언티스트", "data scientist"]),
-    ("ML/MLOps 엔지니어", ["머신러닝", "ml 엔지니어", "ml engineer", "machine learning", "mlops"]),
-    ("AI 엔지니어",       ["ai 엔지니어", "ai엔지니어", "ai engineer", "인공지능 엔지니어"]),
+    ("AE", ["analytics engineer", "데이터 애널리틱스", "데이터애널리틱스", "애널리틱스 엔지니어"]),
+    ("DE", ["데이터 엔지니어", "데이터엔지니어", "data engineer"]),
+    ("DA", ["데이터 분석가", "데이터분석가", "data analyst"]),
+    ("DS", ["데이터 사이언티스트", "데이터사이언티스트", "data scientist"]),
+    ("MLE", ["머신러닝", "ml 엔지니어", "ml engineer", "machine learning", "mlops"]),
+    ("AIE", ["ai 엔지니어", "ai엔지니어", "ai engineer", "인공지능 엔지니어"]),
 ]
 
 
-def _categorize(title: str) -> str:
+def _categorize(title: str):
     t = title.lower()
     for category, keywords in _CATEGORY_KEYWORDS:
         if any(kw in t for kw in keywords):
             return category
-    return "기타"
+    return None
 
 
 def run_scrape() -> dict:
@@ -36,9 +37,10 @@ def run_scrape() -> dict:
     counts: dict[str, int] = {}
     for job in ZighangScraper().scrape():
         if not notion.is_duplicate(job):
-            notion.add_job(job)
             category = _categorize(job.title)
-            counts[category] = counts.get(category, 0) + 1
+            notion.add_job(job, category=category)
+            if category:
+                counts[category] = counts.get(category, 0) + 1
             logger.info(f"추가: {job.company} - {job.title}")
     logger.info(f"총 {sum(counts.values())}건 신규 공고 추가됨")
     return counts
