@@ -211,16 +211,29 @@
 
 ## 6. 개발 과정
 
+| PR | 제목 | 핵심 작업 |
+|---|---|---|
+| [#1](https://github.com/benidjor/samjik-job-radar/pull/1) | 기반 파이프라인 구축 | 직행 API 분석, 스크래퍼 + Notion 연동 초기 구현 |
+| [#2](https://github.com/benidjor/samjik-job-radar/pull/2) | 파이프라인 개편 및 리뷰 알림 전면 개편 | 스크래퍼 단일화, 중복 체크 개선, D-3/D-1/D-DAY 알림 구현 |
+| [#3](https://github.com/benidjor/samjik-job-radar/pull/3) | Notion 직무 분류 컬럼 연동 및 Discord 링크 삽입 | 직무 분류 자동 태깅, 직무별 필터 뷰 링크, Notion 페이지 직접 링크 |
+| [#4](https://github.com/benidjor/samjik-job-radar/pull/4) | README 및 프로젝트 명칭 정비 | 프로젝트 명칭 통일, README.md 신규 작성 |
+
+---
+
 ### [PR #1](https://github.com/benidjor/samjik-job-radar/pull/1) — 기반 파이프라인 구축
 
 원티드와 직행 두 플랫폼에서 공고를 수집하는 기반 파이프라인 구축.
 
-**직행 API 분석**
-직행 공식 도메인(jikhae.com) 미존재 확인 → 브라우저 개발자 도구와 Next.js 번들 파일 직접 분석 → 실제 API 엔드포인트(`api.zighang.com/api/recruitments/v3`) 발견.
-Playwright HTML 스크래핑 대신 JSON API 직접 호출 방식 채택. 속도와 안정성 대폭 향상.
+#### 직행 API 분석
 
-**미완료 사항**
-서류 작성 DB 연동은 Notion 관리자 권한 승인 대기로 다음 PR로 이월.
+- 직행 공식 도메인(jikhae.com) 미존재 확인
+- 브라우저 개발자 도구 + Next.js 번들 파일 직접 분석 → 실제 엔드포인트 발견
+  - `api.zighang.com/api/recruitments/v3`
+- Playwright HTML 스크래핑 대신 **JSON API 직접 호출** 방식 채택 → 속도·안정성 대폭 향상
+
+#### 미완료 사항
+
+- 서류 작성 DB 연동은 Notion 관리자 권한 승인 대기로 다음 PR로 이월
 
 ---
 
@@ -228,57 +241,76 @@ Playwright HTML 스크래핑 대신 JSON API 직접 호출 방식 채택. 속도
 
 가장 많은 작업이 이루어진 단계.
 
-**스크래퍼 단일화**
-실제 운영 결과 원티드·직행 공고가 상당 부분 중복됨 확인 → 원티드 스크래퍼 제거, 직행 단일화.
+#### 스크래퍼 단일화
 
-**중복 체크 기준 변경: URL → 기업명 + 직무명**
-URL 기반 체크는 키워드별 검색 시 동일 공고가 중복 수집되는 문제 존재.
-기업명 + 직무명 복합 조건으로 변경하여 실질적 중복 제거.
+- 실제 운영 결과 원티드·직행 공고가 상당 부분 중복됨 확인
+- 원티드 스크래퍼 제거, **직행 단일화**
 
-**수집 기간 제한: 30일 이내**
-직행 API는 전체 공고 반환 → 오래된 마감 공고까지 수집되는 문제 발생.
-`createdAt` 기준 30일 이내 공고만 수집하도록 필터 추가.
+#### 중복 체크 기준 변경: URL → 기업명 + 직무명
 
-**서류 작성 DB 연동 완료**
-관리자 권한 취득 후 DB 접근 시도 → 여러 단계에 걸친 오류 발생 (트러블슈팅 TS-2, TS-3 참고).
+- URL 기반 체크는 키워드별 검색 시 동일 공고가 중복 수집되는 문제 존재
+- **기업명 + 직무명** 복합 조건으로 변경하여 실질적 중복 제거
 
-**리뷰 알림 전면 개편**
-기존 단순 텍스트 형식 → D-3 / D-1 / D-DAY 단계별 알림으로 세분화. (리뷰 리마인더 기능 강화 목적)
-Discord 마크다운 문법 적용으로 가독성 향상.
-같은 날 마감하는 서류를 하나의 메시지로 묶는 기능 추가.
+#### 수집 기간 제한: 30일 이내
 
-**Notion 영문 이름 처리**
-Notion people 컬럼에서 영문 표기명 반환 → Discord 멘션 매핑 실패 문제 해결.
-`.env` alias 추가 + 체크박스 매핑 보완, 표시명은 한글로 통일.
+- 직행 API가 전체 공고를 반환 → 오래된 마감 공고까지 수집되는 문제 발생
+- `createdAt` 기준 **30일 이내** 공고만 수집하도록 필터 추가
+
+#### 서류 작성 DB 연동 완료
+
+- 관리자 권한 취득 후 DB 접근 시도 → 여러 단계에 걸친 오류 발생
+- 상세 내용은 [트러블슈팅 TS-2, TS-3](#ts-2-notion-서류-작성-db-접근-불가-400-bad-request) 참고
+
+#### 리뷰 알림 전면 개편
+
+- 기존 단순 텍스트 형식 → **D-3 / D-1 / D-DAY** 단계별 알림으로 세분화
+- Discord 마크다운 문법 적용으로 가독성 향상
+- 같은 날 마감하는 서류를 하나의 메시지로 묶는 기능 추가
+
+#### Notion 영문 이름 처리
+
+- Notion people 컬럼에서 영문 표기명이 반환되어 Discord 멘션 매핑 실패
+- `.env` alias 추가 + 체크박스 매핑 보완, 표시명은 한글로 통일
 
 ---
 
 ### [PR #3](https://github.com/benidjor/samjik-job-radar/pull/3) — Notion 직무 분류 컬럼 연동 및 Discord 링크 삽입
 
-**직무 분류 컬럼 신설 배경**
-스크래핑 요약 메시지에 직무별 Notion 필터 뷰 링크 삽입 시도.
-→ Notion API가 View 정보를 미공개로 View ID를 프로그래밍으로 가져올 수 없음 확인.
+#### 직무 분류 컬럼 신설 배경
 
-**대안: 직무 분류 컬럼 신설**
-Notion에 `직무 분류` (select) 컬럼 추가 → 스크래핑 시 AE / DE / DA / DS / MLE / AIE 자동 저장.
-Notion에서 직무별 필터 뷰를 수동으로 한 번만 생성하고 URL을 코드에 매핑.
-초기 1회 세팅 후 이후 자동 동작.
+- 스크래핑 요약 메시지에 직무별 Notion 필터 뷰 링크 삽입 시도
+- Notion API가 View 정보를 미공개 → View ID를 프로그래밍으로 가져올 수 없음
 
-**Notion 페이지 직접 링크**
-리뷰 알림 메시지 공고 헤딩에 Notion 서류 작성 페이지 링크 삽입.
-Notion API 응답의 `page["url"]` 필드 활용.
+#### 대안: 직무 분류 컬럼 신설
 
-**직행 키워드 개선**
-한글 키워드 붙여쓰기 → 띄어쓰기 적용 (직행 API 검색 정확도 향상 확인).
-MLE 카테고리에 `ML Engineer`, `ML 엔지니어` 키워드 추가.
+- Notion에 `직무 분류` (select) 컬럼 추가 → 스크래핑 시 AE / DE / DA / DS / MLE / AIE **자동 저장**
+- Notion에서 직무별 필터 뷰를 수동으로 한 번만 생성하고 URL을 코드에 매핑
+- 초기 1회 세팅 후 이후 자동 동작
+
+![노션 채용공고 DB](https://i.imgur.com/Fj3tEpQ.png)
+
+#### Notion 페이지 직접 링크
+
+- 리뷰 알림 메시지 공고 헤딩에 Notion 서류 작성 페이지 링크 삽입
+- Notion API 응답의 `page["url"]` 필드 활용
+
+#### 직행 키워드 개선
+
+- 한글 키워드 붙여쓰기 → 띄어쓰기 적용 (직행 API 검색 정확도 향상 확인)
+- MLE 카테고리에 `ML Engineer`, `ML 엔지니어` 키워드 추가
 
 ---
 
 ### [PR #4](https://github.com/benidjor/samjik-job-radar/pull/4) — README 및 프로젝트 명칭 정비
 
-코드 내부에 `job-automation`, `iljik-job-radar` 등 혼재된 프로젝트 명칭을 `samjik-job-radar`로 통일.
-Discord 봇 이름 `삼직이`에서 착안. GitHub 레포 이름도 동일하게 변경.
-README.md 신규 작성으로 프로젝트 문서화 완성.
+#### 프로젝트 명칭 통일
+
+- 코드 내부에 `job-automation`, `iljik-job-radar` 등 혼재된 명칭을 `samjik-job-radar`로 통일
+- Discord 봇 이름 `삼직이`에서 착안, GitHub 레포 이름도 동일하게 변경
+
+#### README.md 신규 작성
+
+- 프로젝트 기능, 설치·실행 방법, 환경변수 목록, GitHub Actions 자동화 내용 문서화
 
 ---
 
