@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd /home/aryijq/job-automation && python3 -m pytest tests/ -q --tb=short 2>&1 | tail -5"
+            "command": "cd /Users/aryijq/Documents/01_DE_project/samjik-job-radar && python3 -m pytest tests/ -q --tb=short 2>&1 | tail -5"
           }
         ]
       }
