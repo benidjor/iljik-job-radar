@@ -48,6 +48,7 @@ pytest tests/ -v
 
 - 언어: 한국어, 존댓말
 - 이모지 사용 금지
+- "Generated with Claude Code" 등 Claude 서명 문구 삽입 금지
 
 ### 커밋 메시지 형식
 
@@ -107,6 +108,4 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ## 관련 이슈 (해당되는 경우)
 
 - 관련 PR 또는 이슈 내용
-
-🤖 Generated with Claude Code
 ```
